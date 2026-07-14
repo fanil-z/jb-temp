@@ -1,9 +1,8 @@
 ---
 tags:
-  - run-configuration
+  - run.configuration.exec
   - writerside
-  - documentation-build
-  - build-execution
+  - save-as-zip
 ---
 
 # event:run.configuration.exec:save-as-zip
