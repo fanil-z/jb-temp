@@ -1,0 +1,113 @@
+/*
+ * JetBrains brand color palette for MkDocs Material theme.
+ *
+ * Brand references:
+ *   Purple  #7B61FF   — primary brand / accent
+ *   Blue    #087CFA
+ *   Pink    #FF318C
+ *   Orange  #FC801D
+ *   Green   #21D789
+ *
+ * IDE dark bg  #1E1F22  (IntelliJ New UI)
+ * IDE panel bg #2B2D30
+ */
+
+/* ── Light scheme ─────────────────────────────────────────────────────────── */
+[data-md-color-scheme="jb-light"] {
+  --md-primary-fg-color:          #7B61FF;
+  --md-primary-fg-color--light:   #A991FF;
+  --md-primary-fg-color--dark:    #5A3FD6;
+  --md-primary-bg-color:          #FFFFFF;
+  --md-primary-bg-color--light:   rgba(255,255,255,0.7);
+
+  --md-accent-fg-color:           #087CFA;
+  --md-accent-fg-color--transparent: rgba(8,124,250,0.1);
+  --md-accent-bg-color:           #FFFFFF;
+
+  /* Header */
+  --md-header-bg-color:           #1E1F22;
+  --md-header-fg-color:           #FFFFFF;
+
+  /* Tabs */
+  --md-tabs-fg-color:             rgba(255,255,255,0.7);
+  --md-tabs-fg-color--active:     #FFFFFF;
+
+  /* Links */
+  --md-typeset-a-color:           #7B61FF;
+
+  /* Code blocks */
+  --md-code-bg-color:             #F5F4FF;
+  --md-code-fg-color:             #1E1F22;
+  --md-code-hl-color:             rgba(123,97,255,0.15);
+
+  /* Admonitions — remap tip/info to JB blue/purple */
+  --md-admonition-fg-color:       rgba(0,0,0,0.87);
+  --md-admonition-bg-color:       #FFFFFF;
+}
+
+/* ── Shared adjustments ───────────────────────────────────────────────────── */
+
+/* Nav sidebar active item — purple underline */
+.md-nav__link--active {
+  color: var(--md-primary-fg-color) !important;
+  font-weight: 600;
+}
+
+/* Tag chips */
+.md-tag {
+  background-color: var(--md-primary-fg-color);
+  color: #FFFFFF !important;
+}
+
+/* Admonition accent overrides */
+.md-typeset .admonition.tip,
+.md-typeset details.tip {
+  border-color: #21D789;
+}
+.md-typeset .tip > .admonition-title,
+.md-typeset .tip > summary {
+  background-color: rgba(33,215,137,0.1);
+}
+.md-typeset .tip > .admonition-title::before,
+.md-typeset .tip > summary::before {
+  background-color: #21D789;
+}
+
+.md-typeset .admonition.warning,
+.md-typeset details.warning {
+  border-color: #FC801D;
+}
+.md-typeset .warning > .admonition-title,
+.md-typeset .warning > summary {
+  background-color: rgba(252,128,29,0.1);
+}
+.md-typeset .warning > .admonition-title::before,
+.md-typeset .warning > summary::before {
+  background-color: #FC801D;
+}
+
+.md-typeset .admonition.info,
+.md-typeset details.info {
+  border-color: #087CFA;
+}
+.md-typeset .info > .admonition-title,
+.md-typeset .info > summary {
+  background-color: rgba(8,124,250,0.1);
+}
+.md-typeset .info > .admonition-title::before,
+.md-typeset .info > summary::before {
+  background-color: #087CFA;
+}
+
+.md-typeset .admonition.danger,
+.md-typeset details.danger {
+  border-color: #FF318C;
+}
+.md-typeset .danger > .admonition-title,
+.md-typeset .danger > summary {
+  background-color: rgba(255,49,140,0.1);
+}
+.md-typeset .danger > .admonition-title::before,
+.md-typeset .danger > summary::before {
+  background-color: #FF318C;
+}
