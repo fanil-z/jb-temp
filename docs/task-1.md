@@ -127,7 +127,7 @@ The following payloads are taken from an actual Writerside telemetry session and
 ### Event Metadata
 
 !!! info "Info"
-    The event metadata represents the first 8 data records of the log line. IDE collects the same metadata for all events. Thus, the number and names of the fields in the metadata are always the same. Unlike the events data, where each event has specific metrics.
+  The event metadata represents the first 8 data records of the log line. The IDE collects the same metadata for all events. Thus, the number and names of the fields in the metadata are always the same, unlike the event data, where each event has specific metrics.
 
 | Field | Type | Description |
 |---|---|---|
@@ -136,7 +136,7 @@ The following payloads are taken from an actual Writerside telemetry session and
 | `build` | `string` | IDE build number (e.g. `261.25134.95`). |
 | `bucket` | `string` | A/B bucket assignment. |
 | `time` | `int64` | Timestamp of the event in milliseconds. |
-| `group.id` | `string` | Event group identifier. Always `"run.configuration.exec"` for  Writerside documentation build events. |
+| `group.id` | `string` | Event group identifier. Always `"run.configuration.exec"` for Writerside documentation build events. |
 | `group.version` | `int` | Version of the event group. |
 | `event.id` | `string` | Event stage identifier. One of `"started"`, `"ui.shown"`, `"finished"` for Writerside builds. |
 | `event.count` | `int` | Aggregation counter. Usually `1`. |
@@ -146,7 +146,7 @@ The following payloads are taken from an actual Writerside telemetry session and
 | Field | Type | Description |
 |---|---|---|
 | `system_event_id` | `int` | Numeric event ID. The number sequentially increases within the session. |
-| `ide_activity_id` | `int` | IDE activity ID. Appears on rare events. |
+| `ide_activity_id` | `int` | Unique ID linking all stages of a single execution (`started`→`ui.shown`→`finished`). |
 | `factory` | `string` | Run configuration factory identifier. For Writerside: `"save-as-zip"` (HTML documentation build). |
 | `plugin` | `string` | Plugin ID originating the run configuration. For Writerside: `"com.jetbrains.writerside"`. |
 | `plugin_version` | `string` | Version of the Writerside plugin (e.g. `"2026.06.8817"`). |
@@ -166,7 +166,7 @@ The following payloads are taken from an actual Writerside telemetry session and
 | Field | Type | Description |
 |---|---|---|
 | `system_event_id` | `int` | Numeric event ID. The number sequentially increases within the session. |
-| `ide_activity_id` | `int` | IDE activity ID. Appears on rare events. |
+| `ide_activity_id` | `int` | Unique ID linking all stages of a single execution (`started`→`ui.shown`→`finished`). |
 | `created` | `int64` | Timestamp in milliseconds when the UI appeared. |
 | `auto_license_type` | `string` | License type that the IDE uses. |
 | `project` | `string` | SHA-256 hash of the project path. **Anonymized**. |
@@ -176,60 +176,87 @@ The following payloads are taken from an actual Writerside telemetry session and
 | Field | Type | Description |
 |---|---|---|
 | `system_event_id` | `int` | Numeric event ID. The number sequentially increases within the session. |
-| `ide_activity_id` | `int` | IDE activity ID. Appears on rare events. |
+| `ide_activity_id` | `int` | Unique ID linking all stages of a single execution (`started`→`ui.shown`→`finished`). |
 | `duration_ms` | `int` | Total elapsed time in milliseconds from `started` to `finished`. |
 | `finish_type` | `string` | The outcome type. Common values: `"UNKNOWN"`, `"SUCCESS"`, `"ERROR"`, `"STOPPED"`. |
 | `created` | `int64` | Timestamp in milliseconds when the execution finished. |
 | `auto_license_type` | `string` | License type that the IDE uses. |
 | `project` | `string` | SHA-256 hash of the project path. **Anonymized**. |
 
-## Analytics example: How long does the average build take?
+## Analytics example: How long do Writerside builds take?
 
-To measure successful build durations across many sessions, collect all `finished` events with `finish_type == "SUCCESS"` and calculate the average:
+To measure average Writerside build durations, first identify Writerside runs in `started` events (`plugin == "com.jetbrains.writerside"` and `factory == "save-as-zip"`), then collect matching `finished` events by `session + ide_activity_id` and calculate duration metrics.
 
 === "Python"
 
-    ```python linenums="1" hl_lines="10-12"
+    ```python linenums="1" hl_lines="4 13-16 23"
     import json
 
+    writerside_runs = set()
     durations = []
 
     with open("fus.log") as f:
         for line in f:
             event = json.loads(line)
             data = event["event"]["data"]
+
+            if (
+                event["group"]["id"] == "run.configuration.exec"
+                and event["event"]["id"] == "started"
+                and data.get("plugin") == "com.jetbrains.writerside"
+                and data.get("factory") == "save-as-zip"
+            ):
+                writerside_runs.add((event.get("session"), data.get("ide_activity_id")))
+
             if (
                 event["group"]["id"] == "run.configuration.exec"
                 and event["event"]["id"] == "finished"
-                and data.get("finish_type") == "SUCCESS"
+                and (event.get("session"), data.get("ide_activity_id")) in writerside_runs
+                and data.get("finish_type") in {"SUCCESS", "UNKNOWN"}
             ):
                 durations.append(data["duration_ms"])
 
-    print(f"Successful builds : {len(durations)}")
-    print(f"Average duration  : {sum(durations) / len(durations):.0f} ms")
-    print(f"Fastest           : {min(durations)} ms")
-    print(f"Slowest           : {max(durations)} ms")
+    print(f"Writerside builds: {len(durations)}")
+    if durations:
+        print(f"Average duration: {sum(durations) / len(durations):.0f} ms")
+        print(f"Fastest: {min(durations)} ms")
+        print(f"Slowest: {max(durations)} ms")
+    else:
+        print("No matching finished events found.")
     ```
 
 === "SQL (DuckDB syntax)"
 
     ```sql linenums="1"
+    WITH writerside_started AS (
+        SELECT
+          session AS session,
+          "event".data.ide_activity_id AS ide_activity_id
+        FROM read_ndjson('fus.log', auto_detect=true)
+        WHERE "group".id = 'run.configuration.exec'
+          AND "event".id = 'started'
+          AND "event".data.plugin = 'com.jetbrains.writerside'
+          AND "event".data.factory = 'save-as-zip'
+    )
     SELECT
-        COUNT(*)                                          AS successful_builds,
-        AVG(event.data.duration_ms)                       AS avg_duration_ms,
-        MIN(event.data.duration_ms)                       AS fastest_ms,
-        MAX(event.data.duration_ms)                       AS slowest_ms
-    FROM read_ndjson('fus.log', auto_detect=true)
-    WHERE "group".id   = 'run.configuration.exec'
-      AND "event".id   = 'finished'
-      AND "event".data.finish_type = 'SUCCESS'
+        COUNT(*)                    AS writerside_builds,
+        AVG(f."event".data.duration_ms) AS avg_duration_ms,
+        MIN(f."event".data.duration_ms) AS fastest_ms,
+        MAX(f."event".data.duration_ms) AS slowest_ms
+    FROM read_ndjson('fus.log', auto_detect=true) AS f
+    JOIN writerside_started ws
+      ON f.session = ws.session
+     AND f."event".data.ide_activity_id = ws.ide_activity_id
+    WHERE f."group".id = 'run.configuration.exec'
+      AND f."event".id = 'finished'
+      AND f."event".data.finish_type IN ('SUCCESS', 'UNKNOWN')
     ```
 
 !!! Comment
 
     In this task, I used GitHub Copilot to format the FUS logs into a human-readable format.
 
-    The analytics examples are also AI-generated from my idea as I don't remember the exact syntax of some commands. I have tested the Python example and it gives the correct result. I did not test the SQL example as I don't have the DuckDB or any other DB deployed on my machine at the moment. The SQL syntax must be adjusted depending on which database JetBrains uses to store collected data. DuckDB seem to be the right choice if you want to query a JSONL file directly for analytics.
+    The analytics examples are also AI-generated from my idea and with my corrections, as it is much faster that way. I have tested the Python example, and it gives the correct result. I did not test the SQL example because I don't have DuckDB or any other DB deployed on my machine at the moment. The SQL syntax must be adjusted depending on which database JetBrains uses to store collected data. DuckDB seems to be the right choice if you want to query a JSONL file directly for analytics.
 
 ---
 
