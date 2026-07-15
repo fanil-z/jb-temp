@@ -9,25 +9,24 @@ tags:
 
 [TOC]
 
-## Overview
+## **Overview**
 
-`run.configuration.exec` events are emitted by the JetBrains IDE when a user executes a run configuration. They are the primary telemetry signal for understanding build, test, and deployment activities within the IDE. This documentation focuses on logs from building HTML documentation using the Writerside plugin.
+JetBrains IDE records `run.configuration.exec` events when a user clicks the **Run** button or executes the **Run** action from the **Run** menu bar. This documentation focuses on logs from building HTML documentation using Writerside (documentation plugin from JetBrains).
 
-For Writerside (JetBrains' technical documentation plugin), the `run.configuration.exec` events capture the lifecycle of doc builds: when a user initiates a build (`started` event), when the UI appears (`ui.shown`), and when execution completes (`finished` event).
+For Writerside, the `run.configuration.exec` events capture the lifecycle of doc builds:
 
-!!! info "Catalog entry for internal analytics use"
-    This page documents the Writerside-specific `run.configuration.exec` events as observed in JetBrains telemetry logs (`fus.log`). The run configuration factory is `save-as-zip`, representing the standard "Build Documentation" action.
+1. when a user initiates a build (`started` event);
+2. when the UI appears (`ui.shown`);
+3. and when execution completes (`finished` event).
 
----
-
-## Event Log Sample
+## **Event Log Sample**
 
 The following payloads are taken from an actual Writerside telemetry session and illustrate a user building documentation in HTML format and saving it in a ZIP archive.
 
 !!! info "Info"
     The example FUS logs are formatted. The original logs are in JSONL format.
 
-=== "started"
+=== "1. started"
 
     ```json hl_lines="8 12 17 18"
     {
@@ -64,7 +63,7 @@ The following payloads are taken from an actual Writerside telemetry session and
     }
     ```
 
-=== "ui.shown"
+=== "2. ui.shown"
 
     ```json hl_lines="8 12"
     {
@@ -91,7 +90,7 @@ The following payloads are taken from an actual Writerside telemetry session and
     }
     ```
 
-=== "finished"
+=== "3. finished"
 
     ```json hl_lines="8 12 18"
     {
@@ -122,12 +121,12 @@ The following payloads are taken from an actual Writerside telemetry session and
 
 ---
 
-## Schema Reference
+## **Schema Reference**
 
 ### Event Metadata
 
 !!! info "Info"
-  The event metadata represents the first 8 data records of the log line. The IDE collects the same metadata for all events. Thus, the number and names of the fields in the metadata are always the same, unlike the event data, where each event has specific metrics.
+    The event metadata represents the first 8 data records of the log line. The IDE collects the same metadata for all events. Thus, the number and names of the fields in the metadata are always the same, unlike the event data, where each event has specific metrics.
 
 | Field | Type | Description |
 |---|---|---|
@@ -141,7 +140,7 @@ The following payloads are taken from an actual Writerside telemetry session and
 | `event.id` | `string` | Event stage identifier. One of `"started"`, `"ui.shown"`, `"finished"` for Writerside builds. |
 | `event.count` | `int` | Aggregation counter. Usually `1`. |
 
-### `event.data` fields — `started`
+### 1. `event.data` fields — `started`
 
 | Field | Type | Description |
 |---|---|---|
@@ -161,7 +160,7 @@ The following payloads are taken from an actual Writerside telemetry session and
 | `auto_license_type` | `string` | License type that the IDE uses. |
 | `project` | `string` | SHA-256 hash of the project path. **Anonymized** — cannot be reversed to a real path. |
 
-### `event.data` fields — `ui.shown`
+### 2. `event.data` fields — `ui.shown`
 
 | Field | Type | Description |
 |---|---|---|
@@ -171,7 +170,7 @@ The following payloads are taken from an actual Writerside telemetry session and
 | `auto_license_type` | `string` | License type that the IDE uses. |
 | `project` | `string` | SHA-256 hash of the project path. **Anonymized**. |
 
-### `event.data` fields — `finished`
+### 3. `event.data` fields — `finished`
 
 | Field | Type | Description |
 |---|---|---|
@@ -260,7 +259,7 @@ To measure average Writerside build durations, first identify Writerside runs in
 
 ---
 
-## Reference
+## **Reference**
 
 - [Data Sharing](https://www.jetbrains.com/help/idea/settings-usage-statistics.html)
 - [Product Data Collection and Usage Notice](https://www.jetbrains.com/legal/docs/terms/product_data_collection/)
