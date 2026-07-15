@@ -189,7 +189,7 @@ To measure average Writerside build durations, first identify Writerside runs in
 
 === "Python"
 
-    ```python linenums="1" hl_lines="4 13-16 23"
+    ```python linenums="1" hl_lines="12-15 20-21 23"
     import json
 
     writerside_runs = set()
