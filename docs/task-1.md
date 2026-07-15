@@ -13,7 +13,7 @@ tags:
 
 JetBrains IDE records `run.configuration.exec` events when a user clicks the **Run** button or executes the **Run** action from the **Run** menu bar. This documentation focuses on logs from building HTML documentation using Writerside (documentation plugin from JetBrains).
 
-For Writerside, the `run.configuration.exec` events capture the lifecycle of doc builds:
+For Writerside, the `run.configuration.exec` events run in 3 stages:
 
 1. when a user initiates a build (`started` event);
 2. when the UI appears (`ui.shown`);
@@ -21,7 +21,7 @@ For Writerside, the `run.configuration.exec` events capture the lifecycle of doc
 
 ## **Event Log Sample**
 
-The following payloads are taken from an actual Writerside telemetry session and illustrate a user building documentation in HTML format and saving it in a ZIP archive.
+The following logs are from an actual Intellij IDEA telemetry session. The logs show a user building documentation in HTML format and saving it in a ZIP archive.
 
 !!! info "Info"
     The example FUS logs are formatted. The original logs are in JSONL format.
